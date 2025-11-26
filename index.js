@@ -1,6 +1,6 @@
 import { startServer } from './src/app.js'
 
 startServer().catch((error) => {
-  console.error('❌ Failed to start backend:', error)
+  console.error('Failed to start server:', error)
   process.exit(1)
 })
