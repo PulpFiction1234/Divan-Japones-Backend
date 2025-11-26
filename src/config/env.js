@@ -18,9 +18,7 @@ if (existsSync(envPath)) {
 export const config = {
   port: process.env.PORT || 4000,
   databaseUrl: process.env.DATABASE_URL?.trim(),
-  admin: {
-    username: process.env.ADMIN_USERNAME || 'admin',
-    password: process.env.ADMIN_PASSWORD || 'divanjapones2024'
-  },
-  env: process.env.NODE_ENV || 'development'
+  adminUsername: process.env.ADMIN_USERNAME || 'admin',
+  adminPassword: process.env.ADMIN_PASSWORD || 'divanjapones2024',
+  environment: process.env.NODE_ENV || 'development'
 }
