@@ -17,9 +17,11 @@ export async function createArticle(data) {
     author: data.author || null,
     excerpt: data.excerpt || null,
     content: data.content || null,
-    image_url: data.imageUrl || null,
-    type: data.scheduledAt ? 'activity' : 'publication',
-    is_activity: Boolean(data.scheduledAt),
+    // Accept multiple possible incoming field names for image and activity
+    image_url: data.imageUrl || data.image || data.image_url || null,
+    // Determine activity either from explicit flags or scheduledAt
+    type: (data.scheduledAt || data.isActivity || data.hasActivity) ? 'activity' : 'publication',
+    is_activity: Boolean(data.scheduledAt || data.isActivity || data.hasActivity),
     published_at: data.publishedAt || new Date(),
     scheduled_at: data.scheduledAt || null,
     location: data.location || null,
@@ -59,8 +61,9 @@ export async function updateArticle(id, data) {
     RETURNING *`,
     [
       data.title, data.category || 'General', data.subcategory || null, data.author || null,
-      data.excerpt || null, data.content || null, data.imageUrl || null,
-      isActivity ? 'activity' : 'publication', isActivity, data.publishedAt || new Date(),
+      data.excerpt || null, data.content || null, (data.imageUrl || data.image || data.image_url) || null,
+      (data.scheduledAt || data.isActivity || data.hasActivity) ? 'activity' : 'publication',
+      Boolean(data.scheduledAt || data.isActivity || data.hasActivity), data.publishedAt || new Date(),
       data.scheduledAt || null, data.location || null, data.price || null, id
     ]
   )
