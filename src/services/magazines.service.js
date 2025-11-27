@@ -13,9 +13,10 @@ export async function createMagazine(data) {
     id: randomUUID(),
     title: data.title,
     description: data.description || null,
-    pdf_source: data.pdfSource || null,
+    // Accept both camelCase (frontend) and alternate names (compat)
+    pdf_source: data.pdfSource || data.pdfUrl || null,
     viewer_url: data.viewerUrl || null,
-    cover_image: data.coverImage || null,
+    cover_image: data.coverImage || data.coverUrl || null,
     file_name: data.fileName || null,
     is_pdf_persisted: data.isPdfPersisted || false,
     release_date: data.releaseDate || null,
@@ -48,9 +49,15 @@ export async function updateMagazine(id, data) {
     WHERE id = $9
     RETURNING *`,
     [
-      data.title, data.description || null, data.pdfSource || null, data.viewerUrl || null,
-      data.coverImage || null, data.fileName || null, data.isPdfPersisted || false,
-      data.releaseDate || null, id
+      data.title,
+      data.description || null,
+      (data.pdfSource || data.pdfUrl) || null,
+      data.viewerUrl || null,
+      (data.coverImage || data.coverUrl) || null,
+      data.fileName || null,
+      data.isPdfPersisted || false,
+      data.releaseDate || null,
+      id
     ]
   )
 
