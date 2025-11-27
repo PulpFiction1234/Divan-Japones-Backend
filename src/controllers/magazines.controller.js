@@ -62,7 +62,8 @@ export async function createMagazineArticle(req, res) {
     res.status(201).json(article)
   } catch (error) {
     console.error('Error creating magazine article:', error)
-    res.status(500).json({ error: error.message })
+    const status = error.status && Number.isInteger(error.status) ? error.status : 500
+    res.status(status).json({ error: error.message })
   }
 }
 
@@ -79,7 +80,8 @@ export async function updateMagazineArticle(req, res) {
     res.json(article)
   } catch (error) {
     console.error('Error updating magazine article:', error)
-    res.status(500).json({ error: error.message })
+    const status = error.status && Number.isInteger(error.status) ? error.status : 500
+    res.status(status).json({ error: error.message })
   }
 }
 

@@ -89,8 +89,16 @@ export async function createMagazineArticle(magazineId, data) {
     magazine_id: magazineId,
     title: data.title,
     author: data.author || null,
-    pdf_url: data.pdfUrl,
+    // Accept either camelCase or snake_case from clients
+    pdf_url: data.pdfUrl || data.pdf_url || null,
     page_number: data.pageNumber || null
+  }
+
+  // Validate required fields
+  if (!article.pdf_url || typeof article.pdf_url !== 'string' || !article.pdf_url.trim()) {
+    const err = new Error('El campo "pdfUrl" es requerido y debe ser una URL válida')
+    err.status = 400
+    throw err
   }
 
   const { rows } = await pool.query(
@@ -111,8 +119,23 @@ export async function updateMagazineArticle(magazineId, articleId, data) {
      SET title = $1, author = $2, pdf_url = $3, page_number = $4
      WHERE id = $5 AND magazine_id = $6
      RETURNING *`,
-    [data.title, data.author || null, data.pdfUrl, data.pageNumber || null, articleId, magazineId]
+    [
+      data.title,
+      data.author || null,
+      (data.pdfUrl || data.pdf_url) || null,
+      data.pageNumber || null,
+      articleId,
+      magazineId,
+    ]
   )
+
+  // If pdf_url is null, throw a 400 error for clearer client feedback
+  const updated = rows[0]
+  if (updated && (!updated.pdf_url || typeof updated.pdf_url !== 'string' || !updated.pdf_url.trim())) {
+    const err = new Error('El campo "pdfUrl" es requerido y debe ser una URL válida')
+    err.status = 400
+    throw err
+  }
 
   return rows[0]
 }
