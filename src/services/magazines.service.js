@@ -19,7 +19,8 @@ export async function createMagazine(data) {
     cover_image: data.coverImage || data.coverUrl || null,
     file_name: data.fileName || null,
     is_pdf_persisted: data.isPdfPersisted || false,
-    release_date: data.releaseDate || null,
+    // Normalize releaseDate to YYYY-MM-DD (DATE column expects this format)
+    release_date: data.releaseDate ? (new Date(data.releaseDate).toISOString().slice(0, 10)) : null,
     created_at: new Date()
   }
 
@@ -56,7 +57,7 @@ export async function updateMagazine(id, data) {
       (data.coverImage || data.coverUrl) || null,
       data.fileName || null,
       data.isPdfPersisted || false,
-      data.releaseDate || null,
+      data.releaseDate ? (new Date(data.releaseDate).toISOString().slice(0, 10)) : null,
       id
     ]
   )
@@ -113,7 +114,14 @@ export async function createMagazineArticle(magazineId, data) {
 
 export async function updateMagazineArticle(magazineId, articleId, data) {
   const pool = getPool()
-  
+  // Validate incoming pdfUrl before updating to avoid DB constraint errors
+  const incomingPdf = (data.pdfUrl || data.pdf_url) || null
+  if (!incomingPdf || typeof incomingPdf !== 'string' || !incomingPdf.trim()) {
+    const err = new Error('El campo "pdfUrl" es requerido y debe ser una URL válida')
+    err.status = 400
+    throw err
+  }
+
   const { rows } = await pool.query(
     `UPDATE magazine_articles 
      SET title = $1, author = $2, pdf_url = $3, page_number = $4
@@ -122,20 +130,12 @@ export async function updateMagazineArticle(magazineId, articleId, data) {
     [
       data.title,
       data.author || null,
-      (data.pdfUrl || data.pdf_url) || null,
+      incomingPdf,
       data.pageNumber || null,
       articleId,
       magazineId,
     ]
   )
-
-  // If pdf_url is null, throw a 400 error for clearer client feedback
-  const updated = rows[0]
-  if (updated && (!updated.pdf_url || typeof updated.pdf_url !== 'string' || !updated.pdf_url.trim())) {
-    const err = new Error('El campo "pdfUrl" es requerido y debe ser una URL válida')
-    err.status = 400
-    throw err
-  }
 
   return rows[0]
 }
