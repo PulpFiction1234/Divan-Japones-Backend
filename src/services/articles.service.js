@@ -4,7 +4,25 @@ import { randomUUID } from 'crypto'
 export async function getArticles() {
   const pool = getPool()
   const { rows } = await pool.query('SELECT * FROM articles ORDER BY published_at DESC')
-  return rows
+  // Map DB snake_case fields to camelCase for API consumers
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    category: r.category,
+    subcategory: r.subcategory,
+    author: r.author,
+    excerpt: r.excerpt,
+    content: r.content,
+    image: r.image_url,
+    type: r.type,
+    isActivity: r.is_activity,
+    publishedAt: r.published_at ? new Date(r.published_at).toISOString() : null,
+    scheduledAt: r.scheduled_at ? new Date(r.scheduled_at).toISOString() : null,
+    location: r.location,
+    price: r.price,
+    viewCount: r.view_count,
+    createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
+  }))
 }
 
 export async function createArticle(data) {
@@ -44,7 +62,26 @@ export async function createArticle(data) {
     ]
   )
 
-  return rows[0]
+  const row = rows[0]
+  if (!row) return null
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    subcategory: row.subcategory,
+    author: row.author,
+    excerpt: row.excerpt,
+    content: row.content,
+    image: row.image_url,
+    type: row.type,
+    isActivity: row.is_activity,
+    publishedAt: row.published_at ? new Date(row.published_at).toISOString() : null,
+    scheduledAt: row.scheduled_at ? new Date(row.scheduled_at).toISOString() : null,
+    location: row.location,
+    price: row.price,
+    viewCount: row.view_count,
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+  }
 }
 
 export async function updateArticle(id, data) {
@@ -68,7 +105,26 @@ export async function updateArticle(id, data) {
     ]
   )
 
-  return rows[0]
+  const row = rows[0]
+  if (!row) return null
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    subcategory: row.subcategory,
+    author: row.author,
+    excerpt: row.excerpt,
+    content: row.content,
+    image: row.image_url,
+    type: row.type,
+    isActivity: row.is_activity,
+    publishedAt: row.published_at ? new Date(row.published_at).toISOString() : null,
+    scheduledAt: row.scheduled_at ? new Date(row.scheduled_at).toISOString() : null,
+    location: row.location,
+    price: row.price,
+    viewCount: row.view_count,
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+  }
 }
 
 export async function deleteArticle(id) {

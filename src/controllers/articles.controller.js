@@ -12,8 +12,6 @@ export async function getArticles(req, res) {
 
 export async function createArticle(req, res) {
   try {
-    // Temporary debug log: dump incoming body to server logs to help diagnose missing activity fields
-    console.log('[DEBUG] createArticle req.body =', JSON.stringify(req.body))
     const article = await articlesService.createArticle(req.body)
     res.status(201).json(article)
   } catch (error) {
@@ -24,8 +22,6 @@ export async function createArticle(req, res) {
 
 export async function updateArticle(req, res) {
   try {
-    // Temporary debug log for update
-    console.log('[DEBUG] updateArticle req.body =', JSON.stringify(req.body))
     const article = await articlesService.updateArticle(req.params.id, req.body)
     if (!article) {
       return res.status(404).json({ error: 'Article not found' })
