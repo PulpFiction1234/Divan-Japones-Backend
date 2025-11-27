@@ -4,7 +4,18 @@ import { randomUUID } from 'crypto'
 export async function getMagazines() {
   const pool = getPool()
   const { rows } = await pool.query('SELECT * FROM magazines ORDER BY release_date DESC')
-  return rows
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    description: r.description,
+    pdfSource: r.pdf_source,
+    viewerUrl: r.viewer_url,
+    coverImage: r.cover_image,
+    fileName: r.file_name,
+    isPdfPersisted: r.is_pdf_persisted,
+    releaseDate: r.release_date ? new Date(r.release_date).toISOString() : null,
+    createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
+  }))
 }
 
 export async function createMagazine(data) {
@@ -13,9 +24,10 @@ export async function createMagazine(data) {
     id: randomUUID(),
     title: data.title,
     description: data.description || null,
-    pdf_source: data.pdfSource || null,
+    // Accept both camelCase and legacy names from clients
+    pdf_source: data.pdfSource || data.pdfUrl || null,
     viewer_url: data.viewerUrl || null,
-    cover_image: data.coverImage || null,
+    cover_image: data.coverImage || data.coverUrl || null,
     file_name: data.fileName || null,
     is_pdf_persisted: data.isPdfPersisted || false,
     release_date: data.releaseDate || null,
@@ -35,7 +47,20 @@ export async function createMagazine(data) {
     ]
   )
 
-  return rows[0]
+  const row = rows[0]
+  if (!row) return null
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    pdfSource: row.pdf_source,
+    viewerUrl: row.viewer_url,
+    coverImage: row.cover_image,
+    fileName: row.file_name,
+    isPdfPersisted: row.is_pdf_persisted,
+    releaseDate: row.release_date ? new Date(row.release_date).toISOString() : null,
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+  }
 }
 
 export async function updateMagazine(id, data) {
@@ -48,13 +73,26 @@ export async function updateMagazine(id, data) {
     WHERE id = $9
     RETURNING *`,
     [
-      data.title, data.description || null, data.pdfSource || null, data.viewerUrl || null,
-      data.coverImage || null, data.fileName || null, data.isPdfPersisted || false,
+      data.title, data.description || null, (data.pdfSource || data.pdfUrl) || null, data.viewerUrl || null,
+      (data.coverImage || data.coverUrl) || null, data.fileName || null, data.isPdfPersisted || false,
       data.releaseDate || null, id
     ]
   )
 
-  return rows[0]
+  const row = rows[0]
+  if (!row) return null
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    pdfSource: row.pdf_source,
+    viewerUrl: row.viewer_url,
+    coverImage: row.cover_image,
+    fileName: row.file_name,
+    isPdfPersisted: row.is_pdf_persisted,
+    releaseDate: row.release_date ? new Date(row.release_date).toISOString() : null,
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+  }
 }
 
 export async function deleteMagazine(id) {
