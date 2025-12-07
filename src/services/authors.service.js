@@ -24,6 +24,35 @@ export async function createAuthor(data) {
   return rows[0]
 }
 
+export async function updateAuthor(id, data) {
+  const pool = getPool()
+
+  const existingResult = await pool.query('SELECT * FROM authors WHERE id = $1', [id])
+  if (!existingResult.rowCount) {
+    return null
+  }
+
+  const existing = existingResult.rows[0]
+
+  const name = (data.name ?? existing.name)?.trim()
+  if (!name) {
+    const err = new Error('El nombre del autor es obligatorio')
+    err.status = 400
+    throw err
+  }
+
+  const avatar = typeof data.avatar === 'string' && data.avatar.trim()
+    ? data.avatar.trim()
+    : existing.avatar
+
+  const { rows } = await pool.query(
+    'UPDATE authors SET name = $1, avatar = $2 WHERE id = $3 RETURNING *',
+    [name, avatar, id]
+  )
+
+  return rows[0]
+}
+
 export async function deleteAuthor(id) {
   const pool = getPool()
   const { rowCount } = await pool.query('DELETE FROM authors WHERE id = $1', [id])

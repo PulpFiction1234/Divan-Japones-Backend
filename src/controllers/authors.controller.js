@@ -20,6 +20,20 @@ export async function createAuthor(req, res) {
   }
 }
 
+export async function updateAuthor(req, res) {
+  try {
+    const author = await authorsService.updateAuthor(req.params.id, req.body)
+    if (!author) {
+      return res.status(404).json({ error: 'Author not found' })
+    }
+    res.json(author)
+  } catch (error) {
+    console.error('Error updating author:', error)
+    const status = error.status && Number.isInteger(error.status) ? error.status : 500
+    res.status(status).json({ error: error.message })
+  }
+}
+
 export async function deleteAuthor(req, res) {
   try {
     const success = await authorsService.deleteAuthor(req.params.id)

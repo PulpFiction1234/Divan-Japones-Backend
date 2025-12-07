@@ -5,6 +5,7 @@ const router = Router()
 
 router.get('/', authorsController.getAuthors)
 router.post('/', authorsController.createAuthor)
+router.put('/:id', authorsController.updateAuthor)
 router.delete('/:id', authorsController.deleteAuthor)
 
 export default router
