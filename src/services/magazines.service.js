@@ -42,7 +42,33 @@ export async function createMagazine(data) {
 
 export async function updateMagazine(id, data) {
   const pool = getPool()
-  
+
+  // Fetch current row to avoid wiping fields when partial payloads are sent
+  const existingResult = await pool.query('SELECT * FROM magazines WHERE id = $1', [id])
+  if (!existingResult.rowCount) {
+    return null
+  }
+
+  const existing = existingResult.rows[0]
+
+  // Normalize description line breaks but preserve them
+  const incomingDescription = typeof data.description === 'string'
+    ? data.description.replace(/\r\n/g, '\n')
+    : undefined
+
+  const payload = {
+    title: data.title ?? existing.title,
+    description: incomingDescription ?? existing.description ?? null,
+    pdf_source: (data.pdfSource || data.pdfUrl) ?? existing.pdf_source ?? null,
+    viewer_url: data.viewerUrl ?? existing.viewer_url ?? null,
+    cover_image: (data.coverImage || data.coverUrl) ?? existing.cover_image ?? null,
+    file_name: data.fileName ?? existing.file_name ?? null,
+    is_pdf_persisted: (typeof data.isPdfPersisted === 'boolean' ? data.isPdfPersisted : existing.is_pdf_persisted) ?? false,
+    release_date: data.releaseDate
+      ? new Date(data.releaseDate).toISOString().slice(0, 10)
+      : (existing.release_date ? new Date(existing.release_date).toISOString().slice(0, 10) : null),
+  }
+
   const { rows } = await pool.query(
     `UPDATE magazines SET
       title = $1, description = $2, pdf_source = $3, viewer_url = $4,
@@ -50,14 +76,14 @@ export async function updateMagazine(id, data) {
     WHERE id = $9
     RETURNING *`,
     [
-      data.title,
-      data.description || null,
-      (data.pdfSource || data.pdfUrl) || null,
-      data.viewerUrl || null,
-      (data.coverImage || data.coverUrl) || null,
-      data.fileName || null,
-      data.isPdfPersisted || false,
-      data.releaseDate ? (new Date(data.releaseDate).toISOString().slice(0, 10)) : null,
+      payload.title,
+      payload.description,
+      payload.pdf_source,
+      payload.viewer_url,
+      payload.cover_image,
+      payload.file_name,
+      payload.is_pdf_persisted,
+      payload.release_date,
       id
     ]
   )
