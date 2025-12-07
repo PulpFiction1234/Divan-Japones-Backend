@@ -33,6 +33,7 @@ export async function updateAuthor(id, data) {
   }
 
   const existing = existingResult.rows[0]
+  const previousName = existing.name
 
   const name = (data.name ?? existing.name)?.trim()
   if (!name) {
@@ -49,6 +50,12 @@ export async function updateAuthor(id, data) {
     'UPDATE authors SET name = $1, avatar = $2 WHERE id = $3 RETURNING *',
     [name, avatar, id]
   )
+
+  // Propagate new name to related content when it matches the previous name
+  if (previousName && previousName !== name) {
+    await pool.query('UPDATE articles SET author = $1 WHERE author = $2', [name, previousName])
+    await pool.query('UPDATE magazine_articles SET author = $1 WHERE author = $2', [name, previousName])
+  }
 
   return rows[0]
 }
