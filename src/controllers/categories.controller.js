@@ -32,3 +32,16 @@ export async function deleteCategory(req, res) {
     res.status(500).json({ error: error.message })
   }
 }
+
+export async function updateCategory(req, res) {
+  try {
+    const updated = await categoriesService.updateCategory(req.params.id, req.body)
+    if (!updated) {
+      return res.status(404).json({ error: 'Category not found' })
+    }
+    res.json(updated)
+  } catch (error) {
+    console.error('Error updating category:', error)
+    res.status(500).json({ error: error.message })
+  }
+}

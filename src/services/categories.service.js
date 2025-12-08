@@ -29,3 +29,28 @@ export async function deleteCategory(id) {
   const { rowCount } = await pool.query('DELETE FROM categories WHERE id = $1', [id])
   return rowCount > 0
 }
+
+export async function updateCategory(id, data = {}) {
+  const pool = getPool()
+
+  // Obtener la categoría actual para usar como fallback del nombre previo
+  const currentResult = await pool.query('SELECT * FROM categories WHERE id = $1', [id])
+  const current = currentResult.rows[0]
+  if (!current) return null
+
+  const nextName = data.name?.trim() || current.name
+  const nextSlug = data.slug?.trim() || current.slug
+  const previousName = data.previousName?.trim() || current.name
+
+  const { rows } = await pool.query(
+    'UPDATE categories SET name = $1, slug = $2 WHERE id = $3 RETURNING *',
+    [nextName, nextSlug, id]
+  )
+
+  // Propagar cambio de nombre a artículos existentes que usaban el nombre anterior
+  if (previousName && nextName && previousName !== nextName) {
+    await pool.query('UPDATE articles SET category = $1 WHERE category = $2', [nextName, previousName])
+  }
+
+  return rows[0]
+}
