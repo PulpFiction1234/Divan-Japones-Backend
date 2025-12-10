@@ -30,7 +30,8 @@ export async function initializeSchema() {
         location TEXT,
         price TEXT,
         view_count INTEGER NOT NULL DEFAULT 0,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        notify_sent BOOLEAN NOT NULL DEFAULT false
       )
     `)
 
@@ -46,9 +47,14 @@ export async function initializeSchema() {
         file_name TEXT,
         is_pdf_persisted BOOLEAN NOT NULL DEFAULT false,
         release_date DATE,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        notify_sent BOOLEAN NOT NULL DEFAULT false
       )
     `)
+
+    // Backfill notify_sent for existing tables (idempotent)
+    await pool.query(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS notify_sent BOOLEAN NOT NULL DEFAULT false`)
+    await pool.query(`ALTER TABLE magazines ADD COLUMN IF NOT EXISTS notify_sent BOOLEAN NOT NULL DEFAULT false`)
 
     // Magazine articles table
     await pool.query(`

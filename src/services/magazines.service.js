@@ -22,28 +22,34 @@ export async function createMagazine(data) {
     is_pdf_persisted: data.isPdfPersisted || false,
     // Normalize releaseDate to YYYY-MM-DD (DATE column expects this format)
     release_date: data.releaseDate ? (new Date(data.releaseDate).toISOString().slice(0, 10)) : null,
-    created_at: new Date()
+    created_at: new Date(),
+    notify_sent: false
   }
 
   const { rows } = await pool.query(
     `INSERT INTO magazines (
       id, title, description, pdf_source, viewer_url, cover_image, 
-      file_name, is_pdf_persisted, release_date, created_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      file_name, is_pdf_persisted, release_date, created_at, notify_sent
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING *`,
     [
       magazine.id, magazine.title, magazine.description, magazine.pdf_source,
       magazine.viewer_url, magazine.cover_image, magazine.file_name,
-      magazine.is_pdf_persisted, magazine.release_date, magazine.created_at
+      magazine.is_pdf_persisted, magazine.release_date, magazine.created_at, magazine.notify_sent
     ]
   )
 
   const created = rows[0]
 
-  // Fire-and-forget newsletter notification
-  notifyMagazineCreated(created).catch((err) => {
-    console.error('Newsletter notification failed (magazine):', err.message)
-  })
+  // Fire-and-forget newsletter notification only if release date is due
+  const now = new Date()
+  const notifyAt = created.release_date ? new Date(created.release_date) : null
+  const shouldNotify = !notifyAt || notifyAt <= now
+  if (shouldNotify) {
+    notifyMagazineCreated(created).catch((err) => {
+      console.error('Newsletter notification failed (magazine):', err.message)
+    })
+  }
 
   return created
 }
@@ -54,8 +60,9 @@ export async function updateMagazine(id, data) {
   const { rows } = await pool.query(
     `UPDATE magazines SET
       title = $1, description = $2, pdf_source = $3, viewer_url = $4,
-      cover_image = $5, file_name = $6, is_pdf_persisted = $7, release_date = $8
-    WHERE id = $9
+      cover_image = $5, file_name = $6, is_pdf_persisted = $7, release_date = $8,
+      notify_sent = $9
+    WHERE id = $10
     RETURNING *`,
     [
       data.title,
@@ -66,6 +73,7 @@ export async function updateMagazine(id, data) {
       data.fileName || null,
       data.isPdfPersisted || false,
       data.releaseDate ? (new Date(data.releaseDate).toISOString().slice(0, 10)) : null,
+      false,
       id
     ]
   )

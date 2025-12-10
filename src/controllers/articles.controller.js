@@ -2,7 +2,8 @@ import * as articlesService from '../services/articles.service.js'
 
 export async function getArticles(req, res) {
   try {
-    const articles = await articlesService.getArticles()
+    const includeFuture = req.query.includeFuture === 'true'
+    const articles = await articlesService.getArticles({ includeFuture })
     res.json(articles)
   } catch (error) {
     console.error('Error getting articles:', error)

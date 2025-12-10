@@ -14,6 +14,13 @@ export function initializePool() {
     ssl: { rejectUnauthorized: false }
   })
 
+  // Force sessions to use Chile time zone so NOW() matches local scheduling
+  pool.on('connect', (client) => {
+    client.query("SET TIME ZONE 'America/Santiago'").catch((err) => {
+      console.error('Failed to set session time zone:', err.message)
+    })
+  })
+
   pool.on('error', (err) => {
     console.error('💥 Database pool error:', err)
   })

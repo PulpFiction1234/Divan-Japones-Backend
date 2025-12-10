@@ -2,9 +2,14 @@ import { getPool } from '../config/database.js'
 import { randomUUID } from 'crypto'
 import { notifyArticleCreated } from './notifications.service.js'
 
-export async function getArticles() {
+export async function getArticles({ includeFuture = false } = {}) {
   const pool = getPool()
-  const { rows } = await pool.query('SELECT * FROM articles ORDER BY published_at DESC')
+  const { rows } = await pool.query(
+    `SELECT * FROM articles
+     WHERE ($1::boolean IS TRUE) OR published_at IS NULL OR published_at <= NOW()
+     ORDER BY published_at DESC`,
+    [includeFuture]
+  )
   // Map DB snake_case fields to camelCase for API consumers
   return rows.map((r) => ({
     id: r.id,
@@ -46,20 +51,23 @@ export async function createArticle(data) {
     location: data.location || null,
     price: data.price || null,
     view_count: 0,
-    created_at: new Date()
+    created_at: new Date(),
+    notify_sent: false
   }
 
   const { rows } = await pool.query(
     `INSERT INTO articles (
       id, title, category, subcategory, author, excerpt, content, image_url,
       type, is_activity, published_at, scheduled_at, location, price, view_count, created_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      , notify_sent
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
     RETURNING *`,
     [
       article.id, article.title, article.category, article.subcategory,
       article.author, article.excerpt, article.content, article.image_url,
       article.type, article.is_activity, article.published_at, article.scheduled_at,
-      article.location, article.price, article.view_count, article.created_at
+      article.location, article.price, article.view_count, article.created_at,
+      article.notify_sent
     ]
   )
 
@@ -84,10 +92,15 @@ export async function createArticle(data) {
     createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
   }
 
-  // Fire-and-forget newsletter notification
-  notifyArticleCreated(created).catch((err) => {
-    console.error('Newsletter notification failed (article):', err.message)
-  })
+  // Fire-and-forget newsletter notification only when already publishable/scheduled
+  const now = new Date()
+  const notifyAt = article.is_activity ? (article.scheduled_at || article.published_at) : article.published_at
+  const shouldNotify = notifyAt && new Date(notifyAt) <= now
+  if (shouldNotify) {
+    notifyArticleCreated(created).catch((err) => {
+      console.error('Newsletter notification failed (article):', err.message)
+    })
+  }
 
   return created
 }
@@ -101,15 +114,17 @@ export async function updateArticle(id, data) {
       title = $1, category = $2, subcategory = $3, author = $4,
       excerpt = $5, content = $6, image_url = $7, type = $8,
       is_activity = $9, published_at = $10, scheduled_at = $11,
-      location = $12, price = $13
-    WHERE id = $14
+      location = $12, price = $13, notify_sent = $14
+    WHERE id = $15
     RETURNING *`,
     [
       data.title, data.category || 'General', data.subcategory || null, data.author || null,
       data.excerpt || null, data.content || null, (data.imageUrl || data.image || data.image_url) || null,
       (data.scheduledAt || data.isActivity || data.hasActivity) ? 'activity' : 'publication',
       Boolean(data.scheduledAt || data.isActivity || data.hasActivity), data.publishedAt || new Date(),
-      data.scheduledAt || null, data.location || null, data.price || null, id
+      data.scheduledAt || null, data.location || null, data.price || null,
+      false, // reset notify_sent on update to allow re-send when date changes
+      id
     ]
   )
 

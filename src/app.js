@@ -9,6 +9,8 @@ import categoriesRoutes from './routes/categories.routes.js'
 import authorsRoutes from './routes/authors.routes.js'
 import authRoutes from './routes/auth.routes.js'
 import newsletterRoutes from './routes/newsletter.routes.js'
+import notificationsRoutes from './routes/notifications.routes.js'
+import { startNotificationScheduler } from './services/notifications.service.js'
 
 const app = express()
 
@@ -23,6 +25,7 @@ app.use('/api/categories', categoriesRoutes)
 app.use('/api/authors', authorsRoutes)
 app.use('/api', authRoutes)
 app.use('/api/newsletter', newsletterRoutes)
+app.use('/api/notifications', notificationsRoutes)
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -49,6 +52,7 @@ export async function startServer() {
   app.listen(config.port, () => {
     console.log(`Server running on port ${config.port}`)
     console.log(`Environment: ${config.environment}`)
+    startNotificationScheduler()
   })
 }
 
