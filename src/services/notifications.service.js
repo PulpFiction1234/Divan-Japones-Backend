@@ -60,7 +60,8 @@ function buildArticleLink(article) {
 
 function buildMagazineLink(magazine) {
   const base = config.frontendUrl || 'https://divanjapones.com'
-  return `${base}/revista/${magazine.id}`
+  const slug = magazine.slug || slugifyTitle(magazine.title || '') || magazine.id
+  return `${base}/revista/${slug}`
 }
 
 function toArticlePayload(raw) {
