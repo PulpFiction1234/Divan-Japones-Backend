@@ -83,6 +83,15 @@ export async function initializeSchema() {
       )
     `)
 
+    // Newsletter subscribers
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id UUID PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `)
+
     schemaInitialized = true
     console.log('✅ Database schema initialized')
   } catch (error) {

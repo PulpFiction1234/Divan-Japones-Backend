@@ -8,6 +8,7 @@ import magazinesRoutes from './routes/magazines.routes.js'
 import categoriesRoutes from './routes/categories.routes.js'
 import authorsRoutes from './routes/authors.routes.js'
 import authRoutes from './routes/auth.routes.js'
+import newsletterRoutes from './routes/newsletter.routes.js'
 
 const app = express()
 
@@ -21,6 +22,7 @@ app.use('/api/magazines', magazinesRoutes)
 app.use('/api/categories', categoriesRoutes)
 app.use('/api/authors', authorsRoutes)
 app.use('/api', authRoutes)
+app.use('/api/newsletter', newsletterRoutes)
 
 // Error handling
 app.use((err, req, res, next) => {

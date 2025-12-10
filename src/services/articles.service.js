@@ -1,5 +1,6 @@
 import { getPool } from '../config/database.js'
 import { randomUUID } from 'crypto'
+import { notifyArticleCreated } from './notifications.service.js'
 
 export async function getArticles() {
   const pool = getPool()
@@ -64,7 +65,7 @@ export async function createArticle(data) {
 
   const row = rows[0]
   if (!row) return null
-  return {
+  const created = {
     id: row.id,
     title: row.title,
     category: row.category,
@@ -82,6 +83,13 @@ export async function createArticle(data) {
     viewCount: row.view_count,
     createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
   }
+
+  // Fire-and-forget newsletter notification
+  notifyArticleCreated(created).catch((err) => {
+    console.error('Newsletter notification failed (article):', err.message)
+  })
+
+  return created
 }
 
 export async function updateArticle(id, data) {

@@ -1,5 +1,6 @@
 import { getPool } from '../config/database.js'
 import { randomUUID } from 'crypto'
+import { notifyMagazineCreated } from './notifications.service.js'
 
 export async function getMagazines() {
   const pool = getPool()
@@ -37,7 +38,14 @@ export async function createMagazine(data) {
     ]
   )
 
-  return rows[0]
+  const created = rows[0]
+
+  // Fire-and-forget newsletter notification
+  notifyMagazineCreated(created).catch((err) => {
+    console.error('Newsletter notification failed (magazine):', err.message)
+  })
+
+  return created
 }
 
 export async function updateMagazine(id, data) {
