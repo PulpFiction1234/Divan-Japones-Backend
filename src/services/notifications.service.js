@@ -53,13 +53,13 @@ function slugifyTitle(title = '') {
 }
 
 function buildArticleLink(article) {
-  const base = config.frontendUrl || 'https://divanjapones.com'
+  const base = config.frontendUrl || 'https://divanjapones.cl'
   const slug = article.slug || slugifyTitle(article.title || '') || article.id
   return `${base}/article/${slug}`
 }
 
 function buildMagazineLink(magazine) {
-  const base = config.frontendUrl || 'https://divanjapones.com'
+  const base = config.frontendUrl || 'https://divanjapones.cl'
   const slug = magazine.slug || slugifyTitle(magazine.title || '') || magazine.id
   return `${base}/revista/${slug}`
 }
@@ -102,7 +102,7 @@ Si no esperabas este correo, ignóralo y no recibirás más mensajes.`
       <p style="font-size: 15px; line-height: 1.6; margin: 0 0 16px;">Pronto te compartiremos lo último de nuestra agenda cultural. Si en algún momento deseas dejar de recibir correos, responde con "unsubscribe".</p>
 
       <div style="text-align: center; margin: 22px 0;">
-        <a href="https://divanjapones.com" style="display: inline-block; padding: 12px 22px; background: #0f172a; color: #ffffff; text-decoration: none; border-radius: 999px; font-weight: 600;">Visitar Diván Japonés</a>
+        <a href="https://divanjapones.cl" style="display: inline-block; padding: 12px 22px; background: #0f172a; color: #ffffff; text-decoration: none; border-radius: 999px; font-weight: 600;">Visitar Diván Japonés</a>
       </div>
 
       <p style="font-size: 13px; line-height: 1.5; color: #606060; margin: 0;">Si no esperabas este mensaje, ignóralo y no recibirás más correos.</p>

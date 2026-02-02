@@ -21,7 +21,7 @@ export const config = {
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
   adminPassword: process.env.ADMIN_PASSWORD || 'divanjapones2024',
   environment: process.env.NODE_ENV || 'development',
-  frontendUrl: (process.env.FRONTEND_URL || 'https://divanjapones.com').replace(/\/$/, ''),
+  frontendUrl: (process.env.FRONTEND_URL || 'https://divanjapones.cl').replace(/\/$/, ''),
   smtpHost: process.env.SMTP_HOST,
   smtpPort: process.env.SMTP_PORT,
   smtpUser: process.env.SMTP_USER,
